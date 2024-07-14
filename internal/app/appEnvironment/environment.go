@@ -1,7 +1,6 @@
 package appEnvironment
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"plata-ui/internal/pkg/environment"
@@ -18,48 +17,34 @@ const (
 var Env = &environment.AppEnvironment{}
 
 func Load() error {
+	var err error = nil
+
 	if err := godotenv.Load(); err != nil {
 		return err
 	}
 
 	// Database
-	Env.DatabaseHost = os.Getenv("DATABASE_HOST")
-	Env.DatabaseName = os.Getenv("DATABASE_NAME")
+	Env.DatabaseHost, err = getString("DATABASE_HOST")
+	Env.DatabaseName, err = getString("DATABASE_NAME")
+	Env.DatabasePort, err = getNumber("DATABASE_PORT")
+	Env.DatabaseUsername, err = getString("DATABASE_USERNAME")
+	Env.DatabasePassword, err = getString("DATABASE_PASSWORD")
+	Env.DatabaseMaxIdleConn, err = getNumber("DATABASE_POOL_MAX_IDLE_CONN")
+	Env.DatabaseMaxOpenConn, err = getNumber("DATABASE_POOL_MAX_OPEN_CONN")
 
-	dbPort, err := strconv.Atoi(os.Getenv("DATABASE_PORT"))
-	Env.DatabasePort = dbPort
-	if err != nil {
-		return err
-	}
-
-	Env.DatabaseUsername = os.Getenv("DATABASE_USERNAME")
-	Env.DatabasePassword = os.Getenv("DATABASE_PASSWORD")
-
-	dbMaxIdle, err := strconv.Atoi(os.Getenv("DATABASE_POOL_MAX_IDLE_CONN"))
-	Env.DatabaseMaxIdleConn = dbMaxIdle
-	if err != nil {
-		return err
-	}
-
-	dbPoolSize, err := strconv.Atoi(os.Getenv("DATABASE_POOL_MAX_OPEN_CONN"))
-	Env.DatabaseMaxOpenConn = dbPoolSize
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-func getString(val string, name string) (string, error) {
+func getString(name string) (string, error) {
 	value := os.Getenv(name)
 
-	if strings.Trim(val, "") == "" {
-		return val, errors.New(fmt.Sprintf(ERRORS_EMPTY_TEMPLATE, name))
+	if strings.Trim(value, "") == "" {
+		return value, fmt.Errorf(ERRORS_EMPTY_TEMPLATE, name)
 	}
 
 	return value, nil
 }
 
-func getNumber() (int, error) {
-	return strconv.Atoi(os.Getenv("DATABASE_HOST"))
+func getNumber(name string) (int, error) {
+	return strconv.Atoi(os.Getenv(name))
 }
